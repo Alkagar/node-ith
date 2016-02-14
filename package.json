@@ -20,5 +20,10 @@
   "bugs": {
     "url": "https://github.com/Alkagar/node-ith/issues"
   },
-  "homepage": "https://github.com/Alkagar/node-ith#readme"
+  "homepage": "https://github.com/Alkagar/node-ith#readme",
+  "dependencies": {
+    "eslint": "^2.0.0",
+    "lodash": "^4.3.0",
+    "redis": "^2.4.2"
+  }
 }

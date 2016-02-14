@@ -1,0 +1,17 @@
+{
+    "env": {
+        "node": true,
+        "mocha": true,
+        "es6": true
+    },
+    "globals": {
+        "fs": true
+    },
+    "rules": {
+        "quotes" : [1, "single"],
+        "no-use-before-define": 1,
+        "no-underscore-dangle": 0,
+        "semi": [2, "always"],
+        "camelcase": 0
+    }
+}
