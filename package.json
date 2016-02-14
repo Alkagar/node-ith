@@ -1,0 +1,24 @@
+{
+  "name": "ith",
+  "version": "1.0.0",
+  "description": "Simple redis-based proces locking tool",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Alkagar/node-ith.git"
+  },
+  "keywords": [
+    "node",
+    "redis",
+    "lock"
+  ],
+  "author": "Jakub Mrowiec - Alkagar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Alkagar/node-ith/issues"
+  },
+  "homepage": "https://github.com/Alkagar/node-ith#readme"
+}
