@@ -2,6 +2,11 @@ var _ = require('lodash');
 var lock = require('./lock.js');
 var fork = require('child_process').fork;
 
+var bunyan = require('bunyan');
+var log = bunyan.createLogger({
+    name: 'Ith',
+    level: 'info'
+});
 
 var TEXT = {
     NO_LOCK_AQUIRED: 'No lock aquired...',
@@ -41,10 +46,10 @@ module.exports = function ith(setup) {
 
     //TODO: add bunyan for logging
     var onCantAquire = _.get(setup, 'onCantAquire', function() {
-        console.log(TEXT.NO_LOCK_AQUIRED);
+        log.info(TEXT.NO_LOCK_AQUIRED);
     });
     var onAquire = _.get(setup, 'onAquire', function() {
-        console.log(TEXT.LOCK_AQUIRED);
+        log.info(TEXT.LOCK_AQUIRED);
     });
 
     var rd = lock({
@@ -62,14 +67,14 @@ module.exports = function ith(setup) {
     function _startNewProcess() {
         childProcess = fork(processName);
         childProcess.on('close', function(code, signal) {
-            console.log(TEXT.PROCESS_CLOSE);
+            log.info(TEXT.PROCESS_CLOSE, code, signal);
         });
         childProcess.on('error', function(err) {
-            console.log(TEXT.PROCESS_EXIT, err);
+            log.info(TEXT.PROCESS_ERROR, err);
         });
         childProcess.on('exit', function(code, signal) {
             shouldExtend = false;
-            console.log(TEXT.PROCESS_EXIT);
+            log.info(TEXT.PROCESS_EXIT, code, signal);
             // lets try to create new lock when process is killed
             setTimeout(start, extendInterval);
         });
@@ -87,7 +92,7 @@ module.exports = function ith(setup) {
         rd.extend(ttl, function(err, data) {
             if (err) {
                 // lock can't be extended - stop our process
-                console.log(TEXT.CANT_EXTEND_LOCK, err);
+                log.info(TEXT.CANT_EXTEND_LOCK, err);
 
                 // lets terminate process if we cannot extend lock - we should try to restart it either way
                 _terminateProcess();
