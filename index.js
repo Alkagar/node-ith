@@ -1,1 +1,1 @@
-module.export = require('./ith.js');
+module.exports = require('./ith.js');
