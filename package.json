@@ -1,6 +1,6 @@
 {
   "name": "ith",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Simple redis-based proces locking tool",
   "main": "index.js",
   "scripts": {
