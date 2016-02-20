@@ -1,0 +1,14 @@
+{
+    "apps": [{
+        "name": "ith-example",
+        "script": "example-start.js",
+        "out_file": "/tmp/ith-example.log",
+        "merge_logs": false,
+        "instances": 5,
+        "watch": [".."],
+        "igonre_watch": ["node_modules"],
+        "env": {
+            "NODE_ENV": "production"
+        }
+    }]
+}

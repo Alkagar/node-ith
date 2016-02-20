@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var lock = require('./lock.js');
-var fork = require('child_process').fork;
+var spawn = require('child_process').spawn;
 
 var bunyan = require('bunyan');
 var log = bunyan.createLogger({
@@ -12,7 +12,7 @@ var TEXT = {
     NO_LOCK_AQUIRED: 'No lock aquired...',
     LOCK_AQUIRED: 'Lock aquired!',
     PROCESS_CLOSE: 'Stdio has been closed.',
-    PROCESS_EXIT: 'Process killed.',
+    PROCESS_EXIT: 'Process stopped.',
     PROCESS_ERROR: 'Process errored.',
     CANT_EXTEND_LOCK: 'Cannot extend lock for current process.'
 };
@@ -59,18 +59,36 @@ module.exports = function ith(setup) {
     });
 
     function _terminateProcess() {
-        if(!_.isNull(childProces)) {
+        if (!_.isNull(childProces)) {
             childProcess.kill();
         }
     }
 
     function _startNewProcess() {
-        childProcess = fork(processName);
-        childProcess.on('close', function(code, signal) {
-            log.info(TEXT.PROCESS_CLOSE, code, signal);
+        var nodePath = process.execPath;
+        log.info({
+            message: 'Spawning new instance.',
+            executable: nodePath,
+            processFile: processName
         });
-        childProcess.on('error', function(err) {
-            log.info(TEXT.PROCESS_ERROR, err);
+        childProcess = spawn(nodePath, [processName], {
+            stdio: 'pipe'
+        });
+        childProcess.stdout.on('data', function(data) {
+            var output = data.toString();
+            process.stdout.write(output);
+        });
+        childProcess.stderr.on('data', function(data) {
+            var output = data.toString();
+            process.stdout.write(output);
+        });
+        childProcess.on('close', function(code, signal) {
+            log.info(TEXT.PROCESS_CLOSE, code,
+                signal);
+        });
+        childProcess.on('error', function(err, si) {
+            log.info(TEXT.PROCESS_ERROR, err,
+                si);
         });
         childProcess.on('exit', function(code, signal) {
             shouldExtend = false;
@@ -86,7 +104,7 @@ module.exports = function ith(setup) {
 
     function _extendLock() {
         //  lets extend lock with redlock
-        if(!_shouldExtend()) {
+        if (!_shouldExtend()) {
             return;
         }
         rd.extend(ttl, function(err, data) {
