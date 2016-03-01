@@ -1,10 +1,23 @@
 // var unlockScript = 'if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end';
 var extendScript = 'if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("pexpire", KEYS[1], ARGV[2]) else return 0 end';
-
-var redis = require('redis');
+var ERRORS = require('./errors.js');
+var _ = require('lodash');
 
 module.exports = function lock(setup) {
+    // global scope
     var obj = {};
+    // private scope
+    var __ = {};
+
+    setup = setup || {};
+    if (_.isUndefined(setup.redis)){
+         throw ERRORS.NoRedisInstance;
+     }
+
+    // private
+    var resourceName = setup.resourceName;
+    var redis = setup.redis;
+    var value = null;
 
     function random() {
         return Math.random().toString(36).slice(2);
@@ -18,7 +31,7 @@ module.exports = function lock(setup) {
             if (err === null && data === null) {
                 callback({
                     error: 'LockError',
-                    message: 'Can\'t aquire lock for resource ' + resourceName
+                    message: 'Can\'t aquire lock for resource ' + __.getResourceName()
                 }, null);
                 return;
             }
@@ -27,36 +40,43 @@ module.exports = function lock(setup) {
     };
 
     function lock(ttl, callback) {
-        redis.set(resourceName, value, 'NX', 'PX', ttl, getCallbackLock(callback));
+        redis.set(__.getResourceName(), __.getValue(), 'NX', 'PX', ttl, __.getCallbackLock(callback));
         return obj;
     };
 
     function extend(ttl, callback) {
-        redis.eval(extendScript, 1, resourceName, value, ttl, callback);
+        redis.eval(extendScript, 1, __.getResourceName(), __.getValue(), ttl, callback);
         return obj;
     };
 
-    setup = setup || {};
-    var redis = setup.redis;
-    var value = random();
-
-    if (typeof setup.prefix !== 'undefined') {
-        value = setup.prefix + '_' + value;
-    }
-
-    if (typeof setup.redis === 'undefined') {
-        throw {
-            error: 'NoRedisInstance',
-            message: 'You need to provide redis instance in setup.redis parameter.'
+    function getValue() {
+        if (_.isNull(value)) {
+            value = random();
+            if (typeof setup.prefix !== 'undefined') {
+                value = setup.prefix + '_' + value;
+            }
         }
+       return value;
     }
 
-    var resourceName = setup.resourceName;
-    if (typeof resourceName === 'undefined') {
-        resourceName = 'lock_resource_' + random();
+    function getResourceName() {
+        if (typeof resourceName === 'undefined') {
+            resourceName = 'lock_resource_' + __.random();
+        }
+        return resourceName;
     }
 
     obj.lock = lock;
     obj.extend = extend;
+
+    __.random = random;
+    __.getResourceName = getResourceName;
+    __.getValue = getValue;
+    __.getCallbackLock = getCallbackLock;
+
+    if(process.env.NODE_ENV === 'test') {
+        obj.__ = __;
+    }
+
     return obj;
 };
