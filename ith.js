@@ -37,6 +37,9 @@ module.exports = function ith(setup) {
         //TODO: add proper errors
         throw new Error('You need to provide `process` name.');
     }
+    if (!_.isArray(processName)) {
+        processName = [processName];
+    }
 
     var shouldExtend = true;
     var childProcess = null;
@@ -71,7 +74,7 @@ module.exports = function ith(setup) {
             executable: nodePath,
             processFile: processName
         });
-        childProcess = spawn(nodePath, [processName], {
+        childProcess = spawn(nodePath, processName, {
             stdio: 'pipe'
         });
         childProcess.stdout.on('data', function(data) {
