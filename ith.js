@@ -50,6 +50,7 @@ module.exports = function ith(setup) {
     var userOnProcessExit = _.get(setup, 'onProcessExit', _.noop);
     var userOnProcessClose = _.get(setup, 'onProcessClose', _.noop);
     var userOnProcessError = _.get(setup, 'onProcessError', _.noop);
+    var userOnProcessStart = _.get(setup, 'onProcessStart', _.noop);
 
     //TODO: add bunyan for logging
     var onCantAquire = _.get(setup, 'onCantAquire', function() {
@@ -114,6 +115,10 @@ module.exports = function ith(setup) {
             // lets try to create new lock when process is killed
             setTimeout(start, extendInterval);
         });
+        
+        if (_.isFunction(userOnProcessStart)) {
+            userOnProcessStart();
+        }
     }
 
     function _shouldExtend() {
