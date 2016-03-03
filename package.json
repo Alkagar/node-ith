@@ -4,7 +4,7 @@
   "description": "Simple redis-based proces locking tool",
   "main": "index.js",
   "scripts": {
-    "test": "npm test"
+    "test": "export NODE_ENV=test; mocha"
   },
   "repository": {
     "type": "git",
