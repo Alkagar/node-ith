@@ -47,6 +47,10 @@ module.exports = function ith(setup) {
     var extendInterval = _.get(setup, 'extendInterval', 5 * 1000);
     var ttl = _.get(setup, 'ttl', 10 * 1000);
 
+    var userOnProcessExit = _.get(setup, 'onProcessExit', _.noop);
+    var userOnProcessClose = _.get(setup, 'onProcessClose', _.noop);
+    var userOnProcessError = _.get(setup, 'onProcessError', _.noop);
+
     //TODO: add bunyan for logging
     var onCantAquire = _.get(setup, 'onCantAquire', function() {
         log.info(TEXT.NO_LOCK_AQUIRED);
@@ -86,14 +90,25 @@ module.exports = function ith(setup) {
             process.stdout.write(output);
         });
         childProcess.on('close', function(code, signal) {
+            if (_.isFunction(userOnProcessClose)) {
+                userOnProcessClose();
+            }
             log.info(TEXT.PROCESS_CLOSE, code,
                 signal);
         });
         childProcess.on('error', function(err, si) {
+            if (_.isFunction(userOnProcessError)) {
+                userOnProcessError();
+            }
+
             log.info(TEXT.PROCESS_ERROR, err,
                 si);
         });
         childProcess.on('exit', function(code, signal) {
+            if (_.isFunction(userOnProcessExit)) {
+                userOnProcessExit();
+            }
+
             shouldExtend = false;
             log.info(TEXT.PROCESS_EXIT, code, signal);
             // lets try to create new lock when process is killed
@@ -117,7 +132,8 @@ module.exports = function ith(setup) {
 
                 // lets terminate process if we cannot extend lock - we should try to restart it either way
                 _terminateProcess();
-            } else {
+            }
+            else {
                 // lets try schedule extending time for our lock
                 setTimeout(_extendLock, extendInterval);
             }
@@ -131,7 +147,8 @@ module.exports = function ith(setup) {
                 onCantAquire();
                 // lock was not aquired, let's try again after extendInterval
                 setTimeout(start, extendInterval);
-            } else {
+            }
+            else {
                 // we have lock for this process, we can start our process
                 onAquire();
 
